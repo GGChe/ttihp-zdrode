@@ -6,6 +6,8 @@ SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
 PROJECT_SOURCES = tt_um_factory_test.v
+USER_TESTS = tb_tt_module.v
+
 
 ifneq ($(GATES),yes)
 
