@@ -11,7 +11,7 @@ run_sim_tt:
 	gtkwave wave.vcd
 
 run_sim_ram:
-	iverilog -o sim.out src/*.v test/tb_ram_wide.v
+	iverilog -o sim.out src/*.v test/tb_ram16.v
 	vvp sim.out
 
 
