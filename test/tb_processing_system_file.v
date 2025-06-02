@@ -21,23 +21,23 @@ module tb_processing_system_file;
     // ---------------------------------------------------------
     // DUT I/O
     // ---------------------------------------------------------
-    reg  [DATA_WIDTH-1:0] sample_in      = 0;
-    reg                   sample_in_valid= 0;
+    reg  [DATA_WIDTH-1:0] sample_in       = 0;
+    reg                   sample_in_valid = 0;
 
     wire [NUM_UNITS-1:0]      spike_detection_array;
     wire [2*NUM_UNITS-1:0]    event_out_array;
 
     processing_system #(
         .NUM_UNITS (NUM_UNITS),
-        .DATA_WIDTH(DATA_WIDTH),
-        .DEBUG     (0)
+        .DATA_WIDTH(DATA_WIDTH)
     ) dut (
-        .clk (clk),
-        .rst (rst),
+        .clk(clk),
+        .rst(rst),
         .sample_in(sample_in),
-        .sample_in_valid(sample_in_valid),
+        .write_sample_in(sample_in_valid),  // match DUT port name
         .spike_detection_array(spike_detection_array),
-        .event_out_array(event_out_array)
+        .event_out_array(event_out_array),
+        .sample_valid_debug() // Optional: hook up if needed
     );
 
     // ---------------------------------------------------------
@@ -51,20 +51,19 @@ module tb_processing_system_file;
     integer max_samples  = 250000;
     integer k;
 
-    // Open files and handle errors once
     initial begin
-        data_file = $fopen("test/20170420/20170420_slice01_01_CTRL1_0006_43_unsigned.txt","r");
-        if (data_file==0) begin
+        data_file = $fopen("test/20170420/20170420_slice01_01_CTRL1_0006_43_unsigned.txt", "r");
+        if (data_file == 0) begin
             $display("ERROR: cannot open data file."); $finish;
         end
-        ev_file = $fopen("output/event_out_log.txt","w");
-        if (ev_file==0) begin
+        ev_file = $fopen("output/event_out_log.txt", "w");
+        if (ev_file == 0) begin
             $display("ERROR: cannot open event log."); $finish;
         end
     end
 
     // ---------------------------------------------------------
-    // Stimulus / scoreboard
+    // Stimulus
     // ---------------------------------------------------------
     initial begin
         $dumpfile("wave.vcd");
@@ -75,16 +74,21 @@ module tb_processing_system_file;
         $display("*** Feeding samples ***");
 
         while ((!$feof(data_file)) && (sample_count < max_samples)) begin
-            @(posedge clk);
-            // one-cycle strobe
-            sample_in_valid <= 1'b1;
-            if ($feof(data_file)==0) begin
-                code = $fscanf(data_file,"%d\n",int_in);
-                if (code>0) sample_in <= int_in[15:0];
+            // Read next sample from file
+            code = $fscanf(data_file, "%d\n", int_in);
+            if (code > 0) begin
+                sample_in = int_in[15:0];
+
+                // Send same sample to all NUM_UNITS
+                for (k = 0; k < NUM_UNITS; k = k + 1) begin
+                    @(posedge clk);
+                    sample_in_valid <= 1'b1;
+                    @(posedge clk);
+                    sample_in_valid <= 1'b0;
+                end
+
+                sample_count = sample_count + 1;
             end
-            @(posedge clk);
-            sample_in_valid <= 1'b0;  // de-assert for at least 1 clk
-            sample_count = sample_count + 1;
         end
 
         $display("*** Finished after %0d samples ***", sample_count);

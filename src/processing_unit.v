@@ -9,7 +9,7 @@ module processing_unit (
     output wire        spike_detection,
     output wire [1:0]  event_out
 );
-
+    reg [15:0] last_data_in;
     // Internal signal
     wire spike_detected_internal;
 
@@ -37,8 +37,14 @@ module processing_unit (
     assign spike_detection = spike_detected_internal;
     // always @(posedge clk) begin
     //     if (!rst) begin
-    //         $display("DEBUG: data_in = %h at time %t", data_in, $time);
+    //         if (data_in !== last_data_in) begin
+    //             $display("DEBUG: data_in = %h at time %t", data_in, $time);
+    //             last_data_in <= data_in;
+    //         end
+    //     end else begin
+    //         last_data_in <= 16'hxxxx;
     //     end
     // end
+
 
 endmodule
