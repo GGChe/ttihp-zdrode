@@ -8,48 +8,42 @@ module tb_processing_system_file;
     // ---------------------------------------------------------
     localparam NUM_UNITS  = 4;
     localparam DATA_WIDTH = 16;
+    localparam CLK_PERIOD = 10;
 
-    localparam CLK_PERIOD = 10;   // 100 MHz
-
-    // ---------------------------------------------------------
-    // Clock / reset
-    // ---------------------------------------------------------
+    // DUT Signals
     reg clk = 0;
     reg rst = 1;
-    always #(CLK_PERIOD/2) clk = ~clk;
+    reg [DATA_WIDTH-1:0] sample_in = 0;
+    reg write_sample_in = 0;
+    wire [NUM_UNITS-1:0] spike_detection_array;
+    wire [2*NUM_UNITS-1:0] event_out_array;
+    wire sample_valid_debug;
 
-    // ---------------------------------------------------------
-    // DUT I/O
-    // ---------------------------------------------------------
-    reg  [DATA_WIDTH-1:0] sample_in       = 0;
-    reg                   sample_in_valid = 0;
-
-    wire [NUM_UNITS-1:0]      spike_detection_array;
-    wire [2*NUM_UNITS-1:0]    event_out_array;
-
+    // Instantiate the DUT
     processing_system #(
-        .NUM_UNITS (NUM_UNITS),
+        .NUM_UNITS(NUM_UNITS),
         .DATA_WIDTH(DATA_WIDTH)
     ) dut (
         .clk(clk),
         .rst(rst),
         .sample_in(sample_in),
-        .write_sample_in(sample_in_valid),  // match DUT port name
+        .write_sample_in(write_sample_in),
         .spike_detection_array(spike_detection_array),
         .event_out_array(event_out_array),
-        .sample_valid_debug() // Optional: hook up if needed
+        .sample_valid_debug(sample_valid_debug)
     );
 
-    // ---------------------------------------------------------
+    // Clock generation
+    always #(CLK_PERIOD/2) clk = ~clk;
+
     // File I/O
-    // ---------------------------------------------------------
     integer data_file;
     integer ev_file;
     integer code;
     integer int_in;
     integer sample_count = 0;
     integer max_samples  = 250000;
-    integer k;
+    integer i;
 
     initial begin
         data_file = $fopen("test/20170420/20170420_slice01_01_CTRL1_0006_43_unsigned.txt", "r");
@@ -62,9 +56,7 @@ module tb_processing_system_file;
         end
     end
 
-    // ---------------------------------------------------------
     // Stimulus
-    // ---------------------------------------------------------
     initial begin
         $dumpfile("wave.vcd");
         $dumpvars(0, tb_processing_system_file);
@@ -74,34 +66,38 @@ module tb_processing_system_file;
         $display("*** Feeding samples ***");
 
         while ((!$feof(data_file)) && (sample_count < max_samples)) begin
-            // Read next sample from file
+            // Read one value from the file
             code = $fscanf(data_file, "%d\n", int_in);
             if (code > 0) begin
                 sample_in = int_in[15:0];
 
-                // Send same sample to all NUM_UNITS
-                for (k = 0; k < NUM_UNITS; k = k + 1) begin
+                // Send this same sample 4 times to fill RAM
+                for (i = 0; i < NUM_UNITS; i = i + 1) begin
                     @(posedge clk);
-                    sample_in_valid <= 1'b1;
+                    write_sample_in <= 1;
                     @(posedge clk);
-                    sample_in_valid <= 1'b0;
+                    write_sample_in <= 0;
                 end
 
                 sample_count = sample_count + 1;
+
+                // Wait for read and output
+                wait(sample_valid_debug);
+                @(posedge clk);
+                // $display("Sample %0d => Spike = %b, Event = %b",
+                //     sample_count, spike_detection_array, event_out_array);
             end
         end
 
         $display("*** Finished after %0d samples ***", sample_count);
-        #500;
+        #100;
         $fclose(data_file);
         $fclose(ev_file);
         $finish;
     end
 
-    // ---------------------------------------------------------
-    // Event logging (every clk)
-    // ---------------------------------------------------------
+    // Logging output
     always @(posedge clk)
-        $fwrite(ev_file,"%t,%0h\n",$time,event_out_array);
+        $fwrite(ev_file, "%t, %0h\n", $time, event_out_array);
 
 endmodule
