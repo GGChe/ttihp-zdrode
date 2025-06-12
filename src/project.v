@@ -24,8 +24,7 @@ module tt_um_example (
     reg [DATA_WIDTH-1:0] sample_sr = 0;
     reg byte_idx = 0;  // toggles 0 → 1 → 0
     reg sample_wr_en = 0;
-
-        wire byte_valid = ui_in[2];
+    wire byte_valid = ui_in[2];
 
     always @(posedge clk) begin
         if (rst) begin

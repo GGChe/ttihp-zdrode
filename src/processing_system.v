@@ -93,21 +93,28 @@ module processing_system #(
 
     genvar gi;
     for (gi = 0; gi < NUM_UNITS; gi = gi + 1) begin : G_PU
-    localparam integer GIDX = gi;  // Create constant for runtime printing
+        localparam integer GIDX = gi;
 
-    processing_unit u_proc (
-        .clk                (clk),
-        .rst                (rst),
-        .data_in            (proc_word_buf[gi]),
-        .threshold_in       (16'd250),
-        .class_a_thresh_in  (8'd10),
-        .class_b_thresh_in  (8'd5),
-        .timeout_period_in  (16'd1000),
-        .spike_detection    (spike_det_int[gi]),
-        .event_out          (event_out_int[2*gi +: 2])
-    );
+        processing_unit u_proc (
+            .clk                (clk),
+            .rst                (rst),
+            .data_in            (proc_word_buf[gi]),
+            .threshold_in       (16'd250),
+            .class_a_thresh_in  (8'd10),
+            .class_b_thresh_in  (8'd5),
+            .timeout_period_in  (16'd1000),
+            .spike_detection    (spike_det_int[gi]),
+            .event_out          (event_out_int[2*gi +: 2])
+        );
 
-end
+        // Display input data for debug
+        // always @(posedge clk) begin
+        //     if (sample_valid) begin
+        //         $display("[PROCESSING_SYSTEM] processing_unit[%0d] proc_word_buf[%0d] = 0x%0h", gi, gi, proc_word_buf[gi]);
+        //     end
+        // end
+    end
+
     assign spike_detection_array = spike_det_int;
     assign event_out_array       = event_out_int;
 endmodule
