@@ -99,9 +99,9 @@ module processing_system #(
             .clk                (clk),
             .rst                (rst),
             .data_in            (proc_word_buf[gi]),
-            .threshold_in       (16'd250),
+            .threshold_in       (16'd200),
             .class_a_thresh_in  (8'd10),
-            .class_b_thresh_in  (8'd5),
+            .class_b_thresh_in  (8'd3),
             .timeout_period_in  (16'd1000),
             .spike_detection    (spike_det_int[gi]),
             .event_out          (event_out_int[2*gi +: 2])

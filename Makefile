@@ -22,7 +22,7 @@ run_sim_processing_system:
 
 run_sim_tt_project:
 	iverilog $(IVERILOG_FLAGS) -o $(SIM_OUT) \
-	  src/processing_system.v src/ram.v src/processing_unit.v src/ado.v src/classifier.v  src/project.v \
+	  src/processing_system.v src/ram.v src/processing_unit.v src/ado.v src/aso.v src/neo.v src/classifier.v  src/project.v \
 	  test/tb_tt_module.v
 	vvp $(SIM_OUT)
 	gtkwave -a $(GTK_SCRIPT_PROCESSING_SYSTEM_FILE)  $(VCD) layout_project.sav
