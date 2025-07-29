@@ -37,7 +37,7 @@ module classifier (
     reg  [31:0] last_b_section_end;
     reg  [31:0] k;
 
-    always @(posedge clk or posedge reset) begin
+    always @(posedge clk) begin
         if (reset) begin
             current_event          <= EVENT_C;
             previous_event         <= EVENT_C;

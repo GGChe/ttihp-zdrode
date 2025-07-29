@@ -57,8 +57,8 @@ module tt_um_top_layer (
 
 
     // Processing system instantiation
-    wire [NUM_UNITS-1:0]   spike_array;
-    wire [2*NUM_UNITS-1:0] event_array;
+    wire [0:0] spike_array [0:NUM_UNITS-1];      // or just: wire spike_array [0:NUM_UNITS-1];
+    wire [1:0] event_array [0:NUM_UNITS-1];
     wire                   sample_valid_unused;  // <-- Added internal wire for unused port
 
     processing_system #(
@@ -77,7 +77,7 @@ module tt_um_top_layer (
     // Output mux: select event/spike data from selected unit
     assign uo_out = {
         5'b00000,
-        event_array[(2 * selected_unit) +: 2],
+        event_array[selected_unit],
         spike_array[selected_unit]
     };
 
