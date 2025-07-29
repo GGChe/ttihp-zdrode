@@ -85,8 +85,8 @@ module tb_tt_module;
         //--------------------------------------------------------------
         // 2.  Open two-channel CSV file
         //--------------------------------------------------------------
-        // data_file = $fopen("input_data_2ch.csv", "r");
-        data_file = $fopen("test/input_data_2ch.csv", "r");
+        data_file = $fopen("input_data_2ch.csv", "r");
+        // data_file = $fopen("test/input_data_2ch.csv", "r");
 
         if (data_file == 0) begin
             $display("FATAL: cannot open input_data_2ch.csv");
